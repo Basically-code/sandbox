@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Tradee Professional Logo">
+  <defs>
+    <linearGradient id="tradeeBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="tradeeAmberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="55%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EA580C"/>
+    </linearGradient>
+    <linearGradient id="tradeePinGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="45%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <filter id="squircleShadow" x="-10%" y="-8%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Daylight Squircle -->
+  <rect x="14" y="14" width="228" height="228" rx="52" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="3" filter="url(#squircleShadow)"/>
+
+  <!-- Left Trade Wing (Buyer Connection Arrow) -->
+  <path d="M44 92 L88 58 L88 76 L138 76 L124 96 L78 96 L88 106 L88 124 Z" fill="url(#tradeeBlueGrad)"/>
+
+  <!-- Right Trade Wing (Seller & Speed Dispatch Arrow) -->
+  <path d="M212 92 L168 58 L168 76 L132 76 L146 96 L178 96 L168 106 L168 124 Z" fill="url(#tradeeAmberGrad)"/>
+
+  <!-- Central Bolt-Style Logistics Pin Stem Forming the "T" Pillar -->
+  <path d="M128 92 L156 132 L141 132 L141 156 C153 163 160 176 160 190 C160 212 128 232 128 232 C128 232 96 212 96 190 C96 176 103 163 115 156 L115 132 L100 132 Z" fill="url(#tradeePinGrad)"/>
+
+  <!-- Inner GPS Core Dot -->
+  <circle cx="128" cy="188" r="12" fill="#FFFFFF"/>
+</svg>

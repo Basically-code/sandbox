@@ -1,0 +1,156 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user profile and default template tags for Havel.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the user." },
+        "displayName": { "type": "string", "description": "Display name of the user." },
+        "email": { "type": "string", "description": "User email address." },
+        "photoUrl": { "type": "string", "description": "Optional avatar URL." },
+        "defaultTags": { "type": "array", "description": "User template tags (e.g. #ScriptIdea, #Startup)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update." }
+      },
+      "required": ["userId", "displayName", "email", "defaultTags", "createdAt", "updatedAt"]
+    },
+    "NoteItem": {
+      "title": "NoteItem",
+      "description": "A zero-friction captured note preserving raw verbatim text alongside AI organization.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "rawContent": { "type": "string", "description": "Immutable verbatim capture text or voice transcript." },
+        "cleanContent": { "type": "string", "description": "AI-stitched readable note text." },
+        "title": { "type": "string", "description": "Short note title." },
+        "tags": { "type": "array", "description": "Searchable template tags." },
+        "captureSource": { "type": "string", "enum": ["in_app", "voice", "lock_screen", "floating_bubble"] },
+        "priority": { "type": "string", "enum": ["normal", "high"] },
+        "deadlineEpochMs": { "type": "integer", "description": "Optional deadline epoch millis (0 if none)." },
+        "deadlineLabel": { "type": "string", "description": "Human-readable deadline label." },
+        "reminderCadence": { "type": "string", "enum": ["none", "daily_digest", "escalating_1w_1d_1h"] },
+        "aiProcessed": { "type": "boolean" },
+        "isArchived": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "rawContent", "cleanContent", "title", "tags", "captureSource", "priority", "deadlineEpochMs", "deadlineLabel", "reminderCadence", "aiProcessed", "isArchived", "createdAt", "updatedAt"]
+    },
+    "StitchedScript": {
+      "title": "StitchedScript",
+      "description": "Non-destructive AI-synthesized cohesive script linking 3+ related raw notes.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "themeTag": { "type": "string" },
+        "insightSummary": { "type": "string" },
+        "scriptBody": { "type": "string" },
+        "linkedNoteIds": { "type": "array" },
+        "linkedNoteCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "themeTag", "insightSummary", "scriptBody", "linkedNoteIds", "linkedNoteCount", "createdAt", "updatedAt"]
+    },
+    "TeamPanel": {
+      "title": "TeamPanel",
+      "description": "Shared Team Panel workspace for collaborative ideation and brainstorming.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "inviteCode": { "type": "string" },
+        "memberUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "ownerName", "name", "description", "inviteCode", "memberUids", "createdAt", "updatedAt"]
+    },
+    "PanelInvite": {
+      "title": "PanelInvite",
+      "description": "Direct-lookup invite code record pointing to a Team Panel.",
+      "type": "object",
+      "properties": {
+        "inviteCode": { "type": "string" },
+        "panelId": { "type": "string" },
+        "panelName": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["inviteCode", "panelId", "panelName", "ownerId", "createdAt"]
+    },
+    "PanelIdea": {
+      "title": "PanelIdea",
+      "description": "Collaborative raw idea card shared inside a Team Panel.",
+      "type": "object",
+      "properties": {
+        "panelId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "content": { "type": "string" },
+        "tag": { "type": "string" },
+        "sourceNoteId": { "type": "string" },
+        "memberUids": { "type": "array" },
+        "upvoterUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["panelId", "authorId", "authorName", "content", "tag", "sourceNoteId", "memberUids", "upvoterUids", "createdAt", "updatedAt"]
+    },
+    "BrainstormEvent": {
+      "title": "BrainstormEvent",
+      "description": "Structured team brainstorming session inside a Team Panel.",
+      "type": "object",
+      "properties": {
+        "panelId": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "title": { "type": "string" },
+        "topicPrompt": { "type": "string" },
+        "scheduledEpochMs": { "type": "integer" },
+        "scheduledLabel": { "type": "string" },
+        "status": { "type": "string", "enum": ["upcoming", "live", "wrapped"] },
+        "aiSummary": { "type": "string" },
+        "participantUids": { "type": "array" },
+        "memberUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["panelId", "creatorId", "creatorName", "title", "topicPrompt", "scheduledEpochMs", "scheduledLabel", "status", "aiSummary", "participantUids", "memberUids", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile and template preferences."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/NoteItem" },
+      "description": "User's personal zero-friction captured notes."
+    },
+    "/users/{userId}/stitched_scripts/{scriptId}": {
+      "schema": { "$ref": "#/entities/StitchedScript" },
+      "description": "AI-synthesized cohesive idea scripts linked to raw notes."
+    },
+    "/panel_invites/{inviteCode}": {
+      "schema": { "$ref": "#/entities/PanelInvite" },
+      "description": "Direct-lookup invite documents for joining Team Panels."
+    },
+    "/panels/{panelId}": {
+      "schema": { "$ref": "#/entities/TeamPanel" },
+      "description": "Shared Team Panel workspaces."
+    },
+    "/panels/{panelId}/ideas/{ideaId}": {
+      "schema": { "$ref": "#/entities/PanelIdea" },
+      "description": "Collaborative ideas shared within a Team Panel."
+    },
+    "/panels/{panelId}/events/{eventId}": {
+      "schema": { "$ref": "#/entities/BrainstormEvent" },
+      "description": "Structured brainstorming events within a Team Panel."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tradee adaptive-icon background: royal blue to midnight navy (matches the web/iOS squircle). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:centerColor="#FF1F3FD1"
+        android:endColor="#FF0A1A3F"
+        android:startColor="#FF3D6BFF"
+        android:type="linear" />
+</shape>

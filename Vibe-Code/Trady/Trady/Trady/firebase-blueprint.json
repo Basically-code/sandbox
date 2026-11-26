@@ -1,0 +1,287 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered Trade Link user profile, active portal role, and mandatory Terms acceptance.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the user." },
+        "fullName": { "type": "string", "description": "Full display or legal name." },
+        "phoneNumber": { "type": "string", "description": "Tanzania phone number (+255...) for buyer/driver verification." },
+        "activeRole": { "type": "string", "enum": ["BUYER", "PROVIDER", "DRIVER"], "description": "Current active portal." },
+        "termsAccepted": { "type": "boolean", "description": "Mandatory Trade Link Terms & Conditions acceptance flag." },
+        "stationName": { "type": "string", "description": "Allocated market station for providers/drivers." },
+        "vehiclePlate": { "type": "string", "description": "Assigned vehicle registration plate." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update." }
+      },
+      "required": ["userId", "fullName", "activeRole", "termsAccepted", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Marketplace listing across 8 categories with stock, size, weight, and truck classification.",
+      "type": "object",
+      "properties": {
+        "providerId": { "type": "string", "description": "Firebase Auth UID of the seller/provider." },
+        "providerName": { "type": "string", "description": "Business or seller display name." },
+        "category": {
+          "type": "string",
+          "enum": [
+            "SPORTS_AND_OUTDOORS",
+            "ELECTRONICS",
+            "FOOD",
+            "BOOKS",
+            "CLOTHING",
+            "SHOES",
+            "JEWELLERY",
+            "BEAUTY_AND_PERSONAL_CARE"
+          ]
+        },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "priceTzs": { "type": "number" },
+        "quantityAvailable": { "type": "integer" },
+        "sizeSpec": { "type": "string" },
+        "weightKg": { "type": "number" },
+        "requiresTruck": { "type": "boolean" },
+        "isDailyDeal": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "pickupLabel": { "type": "string" },
+        "photoUri": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "providerId",
+        "providerName",
+        "category",
+        "title",
+        "priceTzs",
+        "quantityAvailable",
+        "sizeSpec",
+        "weightKg",
+        "requiresTruck",
+        "isDailyDeal",
+        "isActive",
+        "pickupLabel",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order with transport fee, verbal safety code, telemetry coordinates, and refund state.",
+      "type": "object",
+      "properties": {
+        "buyerId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "driverId": { "type": "string" },
+        "participantIds": { "type": "array" },
+        "productId": { "type": "string" },
+        "productTitle": { "type": "string" },
+        "category": { "type": "string" },
+        "selectedSize": { "type": "string" },
+        "quantity": { "type": "integer" },
+        "unitPriceTzs": { "type": "number" },
+        "itemSubtotalTzs": { "type": "number" },
+        "transportFeeTzs": { "type": "number" },
+        "totalAmountTzs": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["CASH_BY_HAND_WITH_RECEIPT", "FIREWALL_CARD_PAYMENT"] },
+        "secretSafetyCode": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "driverName": { "type": "string" },
+        "driverPlate": { "type": "string" },
+        "requiresTruck": { "type": "boolean" },
+        "cargoBoxAttached": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PENDING_DISPATCH",
+            "DRIVER_ASSIGNED",
+            "BOX_ATTACHED_PICKED_UP",
+            "IN_TRANSIT",
+            "ARRIVED_AWAITING_SECRET_CODE",
+            "DELIVERED_COMPLETED",
+            "DAMAGED_OR_LOST_REFUNDED",
+            "ROBBERY_OR_HARM_REFUNDED"
+          ]
+        },
+        "refundAmountTzs": { "type": "number" },
+        "disturbanceCompTzs": { "type": "number" },
+        "driverLat": { "type": "number" },
+        "driverLng": { "type": "number" },
+        "destLat": { "type": "number" },
+        "destLng": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "buyerId",
+        "providerId",
+        "driverId",
+        "participantIds",
+        "productId",
+        "productTitle",
+        "category",
+        "selectedSize",
+        "quantity",
+        "unitPriceTzs",
+        "itemSubtotalTzs",
+        "transportFeeTzs",
+        "totalAmountTzs",
+        "paymentMethod",
+        "secretSafetyCode",
+        "receiptNumber",
+        "driverName",
+        "driverPlate",
+        "requiresTruck",
+        "cargoBoxAttached",
+        "status",
+        "refundAmountTzs",
+        "disturbanceCompTzs",
+        "driverLat",
+        "driverLng",
+        "destLat",
+        "destLng",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DriverContract": {
+      "title": "DriverContract",
+      "description": "Fleet driver daily shift state, dual-mode ride-hail switcher, curfew lock, and 104-week lease-to-own ledger.",
+      "type": "object",
+      "properties": {
+        "driverId": { "type": "string" },
+        "driverName": { "type": "string" },
+        "vehiclePlate": { "type": "string" },
+        "secretGpsImei": { "type": "string" },
+        "stationName": { "type": "string" },
+        "vehicleStatus": {
+          "type": "string",
+          "enum": [
+            "STATION_CHECKED_IN",
+            "ACTIVE_PACKAGE_DELIVERY",
+            "ACTIVE_PASSENGER_IDLE_MODE",
+            "CURFEW_BREACH_STOLEN_ALERT",
+            "MAINTENANCE"
+          ]
+        },
+        "cargoBoxAttached": { "type": "boolean" },
+        "rideHailPartner": { "type": "string", "enum": ["NONE", "STREET_HAIL", "BOLT", "UBER", "LINKER"] },
+        "weeklyFeeTzs": { "type": "integer" },
+        "totalWeeksRequired": { "type": "integer" },
+        "weeksPaidCount": { "type": "integer" },
+        "totalPaidTzs": { "type": "number" },
+        "ownershipTransferred": { "type": "boolean" },
+        "curfewViolated": { "type": "boolean" },
+        "lastCheckedOutLabel": { "type": "string" },
+        "lastCheckedInLabel": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "driverId",
+        "driverName",
+        "vehiclePlate",
+        "secretGpsImei",
+        "stationName",
+        "vehicleStatus",
+        "cargoBoxAttached",
+        "rideHailPartner",
+        "weeklyFeeTzs",
+        "totalWeeksRequired",
+        "weeksPaidCount",
+        "totalPaidTzs",
+        "ownershipTransferred",
+        "curfewViolated",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FavoriteProduct": {
+      "title": "FavoriteProduct",
+      "description": "User-saved favorite product reference under /users/{userId}/favorites/{productId}.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "description": "ID of the favorited product in /products." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp when favorited." }
+      },
+      "required": ["productId", "createdAt"]
+    },
+    "CartItem": {
+      "title": "CartItem",
+      "description": "Persistent shopping cart line item stored under /users/{userId}/cart/{productId}.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "description": "ID of the Marketplace product in /products." },
+        "providerId": { "type": "string", "description": "Seller UID for checkout fulfillment." },
+        "providerName": { "type": "string", "description": "Seller display name." },
+        "category": {
+          "type": "string",
+          "enum": [
+            "SPORTS_AND_OUTDOORS",
+            "ELECTRONICS",
+            "FOOD",
+            "BOOKS",
+            "CLOTHING",
+            "SHOES",
+            "JEWELLERY",
+            "BEAUTY_AND_PERSONAL_CARE"
+          ]
+        },
+        "title": { "type": "string" },
+        "priceTzs": { "type": "number" },
+        "quantity": { "type": "integer" },
+        "sizeSpec": { "type": "string" },
+        "weightKg": { "type": "number" },
+        "requiresTruck": { "type": "boolean" },
+        "pickupLabel": { "type": "string" },
+        "photoUri": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp when first added to cart." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp when cart quantity updated." }
+      },
+      "required": [
+        "productId",
+        "providerId",
+        "providerName",
+        "category",
+        "title",
+        "priceTzs",
+        "quantity",
+        "sizeSpec",
+        "weightKg",
+        "requiresTruck",
+        "pickupLabel",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Owner-isolated user profile, portal preference, and Terms acceptance."
+    },
+    "/users/{userId}/favorites/{productId}": {
+      "schema": { "$ref": "#/entities/FavoriteProduct" },
+      "description": "Owner-isolated list of favorited Marketplace product IDs."
+    },
+    "/users/{userId}/cart/{productId}": {
+      "schema": { "$ref": "#/entities/CartItem" },
+      "description": "Owner-isolated persistent shopping cart items for the user account."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Marketplace listings across all 8 Trade Link categories."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Orders, verbal safety codes, live delivery tracking, and refund payouts."
+    },
+    "/driver_contracts/{driverId}": {
+      "schema": { "$ref": "#/entities/DriverContract" },
+      "description": "Driver shift state, curfew monitoring, and 2-year lease-to-own ledger."
+    }
+  }
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="havel_alabaster">#FFF6F5F0</color>
+    <color name="havel_oat_mist">#FFEAE6DF</color>
+    <color name="havel_sage">#FF7A9A8B</color>
+    <color name="havel_terracotta">#FFC89D84</color>
+    <color name="havel_espresso">#FF2C2A29</color>
+    <color name="havel_charcoal">#FF1C2021</color>
+</resources>

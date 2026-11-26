@@ -1,0 +1,8 @@
+﻿__pycache__/
+*.pyc
+.gradle/
+build/
+.idea/
+.vscode/
+node_modules/
+.DS_Store

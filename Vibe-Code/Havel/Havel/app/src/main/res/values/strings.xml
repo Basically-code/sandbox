@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Havel</string>
+    <string name="tagline">Zero-friction thought capture &amp; calm AI synthesis</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="nav_capture">Notes</string>
+    <string name="nav_scripts">Scripts</string>
+    <string name="nav_reminders">Reminders</string>
+    <string name="nav_panels">Panel</string>
+    <string name="capture_placeholder">Just start writing or tap the mic…</string>
+    <string name="capture_save">Save Note</string>
+    <string name="capture_voice">Voice Note</string>
+    <string name="lock_screen_channel_name">Lock Screen Quick Capture</string>
+    <string name="lock_screen_channel_desc">Persistent Direct Reply bar to jot thoughts right from the lock screen without unlocking.</string>
+    <string name="reminders_channel_name">Smart Escalating Reminders</string>
+    <string name="reminders_channel_desc">Priority-gated 1 week, 1 day, and 1 hour cadence nudges for urgent notes.</string>
+    <string name="bubble_channel_name">Floating Capture Bubble</string>
+    <string name="bubble_channel_desc">Keeps Havel’s on-spot capture bubble ready over other apps.</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "name": "Havel",
+  "description": "Smart, zero-friction AI note-taking for Android with lock screen direct reply, floating capture bubble, priority-gated smart reminders, stitched scripts, and team brainstorming panels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Subtle drop shadow behind stacked stationery cards -->
+    <path
+        android:fillColor="#30000000"
+        android:pathData="M33,28 L66,28 L79,41 L79,79 C79,81.8 76.8,84 74,84 L33,84 C30.2,84 28,81.8 28,79 L28,33 C28,30.2 30.2,28 33,28 Z" />
+
+    <!-- Secondary rotated Oat Mist card underneath (representing Idea Linking / Stitched Scripts) -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="-8">
+        <path
+            android:fillColor="#E5DFD5"
+            android:pathData="M34,28 L67,28 L77,38 L77,77 C77,79.8 74.8,82 72,82 L34,82 C31.2,82 29,79.8 29,77 L29,33 C29,30.2 31.2,28 34,28 Z" />
+    </group>
+
+    <!-- Primary Warm Alabaster tactile stationery sheet -->
+    <path
+        android:fillColor="#F6F5F0"
+        android:pathData="M35,26 L64,26 L77,39 L77,76 C77,78.8 74.8,81 72,81 L35,81 C32.2,81 30,78.8 30,76 L30,31 C30,28.2 32.2,26 35,26 Z" />
+
+    <!-- Folded corner shadow -->
+    <path
+        android:fillColor="#D8D1C5"
+        android:pathData="M64,26 L64,36 C64,38.8 66.2,41 69,41 L77,41 L77,39 Z" />
+
+    <!-- Folded corner flap -->
+    <path
+        android:fillColor="#EAE6DF"
+        android:pathData="M64,26 L64,35 C64,37.2 65.8,39 68,39 L77,39 Z" />
+
+    <!-- Top-left 4-point Dusty Terracotta AI Spark -->
+    <path
+        android:fillColor="#C89D84"
+        android:pathData="M42,32 L43.4,35.6 L47,37 L43.4,38.4 L42,42 L40.6,38.4 L37,37 L40.6,35.6 Z" />
+
+    <!-- Fountain Pen Nib (Zero-Friction Writing) morphing into Voice Waveform -->
+    <path
+        android:fillColor="#5B786B"
+        android:pathData="M35,53.5 L44.5,48.5 C46.5,50 48.2,50.5 50,50.5 L50,57.5 C48.2,57.5 46.5,58 44.5,59.5 L35,54.5 Z" />
+    <!-- Fountain nib slit & breather hole in Warm Alabaster -->
+    <path
+        android:fillColor="#F6F5F0"
+        android:pathData="M35,53.6 L43.2,53.6 L43.2,54.4 L35,54.4 Z" />
+    <path
+        android:fillColor="#F6F5F0"
+        android:pathData="M44,54 m-1.3,0 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0" />
+    <!-- Nib collar band -->
+    <path
+        android:fillColor="#5B786B"
+        android:pathData="M51.5,50.5 L54,50.5 C54.4,50.5 54.8,50.9 54.8,51.3 L54.8,56.7 C54.8,57.1 54.4,57.5 54,57.5 L51.5,57.5 Z" />
+
+    <!-- Voice-to-Note Waveform Bars (Desaturated Sage -> Warm Stone -> Dusty Terracotta) -->
+    <!-- Bar 1 (Sage) -->
+    <path
+        android:fillColor="#678678"
+        android:pathData="M58,46 C58,45 58.8,44.2 59.8,44.2 C60.8,44.2 61.6,45 61.6,46 L61.6,62 C61.6,63 60.8,63.8 59.8,63.8 C58.8,63.8 58,63 58,62 Z" />
+    <!-- Bar 2 (Tall Warm Taupe/Sand) -->
+    <path
+        android:fillColor="#A79482"
+        android:pathData="M63.5,42 C63.5,41 64.3,40.2 65.3,40.2 C66.3,40.2 67.1,41 67.1,42 L67.1,66 C67.1,67 66.3,67.8 65.3,67.8 C64.3,67.8 63.5,67 63.5,66 Z" />
+    <!-- Bar 3 (Dusty Terracotta) -->
+    <path
+        android:fillColor="#C89D84"
+        android:pathData="M69,47.5 C69,46.5 69.8,45.7 70.8,45.7 C71.8,45.7 72.6,46.5 72.6,47.5 L72.6,60.5 C72.6,61.5 71.8,62.3 70.8,62.3 C69.8,62.3 69,61.5 69,60.5 Z" />
+
+    <!-- Bottom-right Minimalist Unlocked Padlock (Lock Screen Availability) -->
+    <!-- Shackle (open) -->
+    <path
+        android:fillColor="#C89D84"
+        android:pathData="M67.2,71.5 L67.2,69.6 C67.2,68.1 68.4,66.9 69.9,66.9 C71.2,66.9 72.2,67.8 72.5,69.0 L71.3,69.3 C71.1,68.6 70.6,68.1 69.9,68.1 C69.1,68.1 68.4,68.8 68.4,69.6 L68.4,71.5 Z" />
+    <!-- Padlock body -->
+    <path
+        android:fillColor="#C89D84"
+        android:pathData="M66.8,71.2 L72.2,71.2 C72.8,71.2 73.2,71.6 73.2,72.2 L73.2,75.8 C73.2,76.4 72.8,76.8 72.2,76.8 L66.8,76.8 C66.2,76.8 65.8,76.4 65.8,75.8 L65.8,72.2 C65.8,71.6 66.2,71.2 66.8,71.2 Z" />
+</vector>

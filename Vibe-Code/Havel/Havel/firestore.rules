@@ -1,0 +1,368 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidStringList(listVal, maxItems, maxItemLen) {
+      return listVal is list &&
+             listVal.size() <= maxItems &&
+             (listVal.size() == 0 || (listVal[0] is string && listVal[0].size() >= 1 && listVal[0].size() <= maxItemLen));
+    }
+
+    // --- ENTITY VALIDATION HELPERS ---
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 200 &&
+             (!('photoUrl' in data) || data.photoUrl == null || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+             isValidStringList(data.defaultTags, 15, 40);
+    }
+
+    function isValidNote(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.rawContent is string && data.rawContent.size() >= 1 && data.rawContent.size() <= 5000 &&
+             data.cleanContent is string && data.cleanContent.size() <= 5000 &&
+             data.title is string && data.title.size() <= 120 &&
+             isValidStringList(data.tags, 10, 40) &&
+             data.captureSource in ['in_app', 'voice', 'lock_screen', 'floating_bubble'] &&
+             data.priority in ['normal', 'high'] &&
+             data.deadlineEpochMs is int && data.deadlineEpochMs >= 0 &&
+             data.deadlineLabel is string && data.deadlineLabel.size() <= 100 &&
+             data.reminderCadence in ['none', 'daily_digest', 'escalating_1w_1d_1h'] &&
+             data.aiProcessed is bool &&
+             data.isArchived is bool;
+    }
+
+    function isValidStitchedScript(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.themeTag is string && data.themeTag.size() >= 1 && data.themeTag.size() <= 40 &&
+             data.insightSummary is string && data.insightSummary.size() <= 600 &&
+             data.scriptBody is string && data.scriptBody.size() >= 1 && data.scriptBody.size() <= 12000 &&
+             data.linkedNoteIds is list && data.linkedNoteIds.size() >= 1 && data.linkedNoteIds.size() <= 30 &&
+             (data.linkedNoteIds[0] is string && data.linkedNoteIds[0].size() <= 128) &&
+             data.linkedNoteCount is int && data.linkedNoteCount >= 1 && data.linkedNoteCount <= 30;
+    }
+
+    function isValidPanel(data) {
+      return data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+             data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 100 &&
+             data.name is string && data.name.size() >= 2 && data.name.size() <= 80 &&
+             data.description is string && data.description.size() <= 300 &&
+             data.inviteCode is string && data.inviteCode.size() >= 4 && data.inviteCode.size() <= 16 &&
+             data.inviteCode.matches('^[A-Za-z0-9_\\-]+$') &&
+             data.memberUids is list && data.memberUids.size() >= 1 && data.memberUids.size() <= 50 &&
+             (data.memberUids[0] is string && data.memberUids[0].size() <= 128);
+    }
+
+    function isValidPanelInvite(data) {
+      return data.inviteCode is string && data.inviteCode.size() >= 4 && data.inviteCode.size() <= 16 &&
+             isValidId(data.panelId) &&
+             data.panelName is string && data.panelName.size() >= 2 && data.panelName.size() <= 80 &&
+             data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128;
+    }
+
+    function isValidPanelIdea(data) {
+      return isValidId(data.panelId) &&
+             data.authorId is string && data.authorId.size() >= 1 && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 100 &&
+             data.content is string && data.content.size() >= 1 && data.content.size() <= 4000 &&
+             data.tag is string && data.tag.size() <= 40 &&
+             data.sourceNoteId is string && data.sourceNoteId.size() <= 128 &&
+             data.memberUids is list && data.memberUids.size() >= 1 && data.memberUids.size() <= 50 &&
+             (data.memberUids[0] is string && data.memberUids[0].size() <= 128) &&
+             isValidStringList(data.upvoterUids, 50, 128);
+    }
+
+    function isValidBrainstormEvent(data) {
+      return isValidId(data.panelId) &&
+             data.creatorId is string && data.creatorId.size() >= 1 && data.creatorId.size() <= 128 &&
+             data.creatorName is string && data.creatorName.size() >= 1 && data.creatorName.size() <= 100 &&
+             data.title is string && data.title.size() >= 2 && data.title.size() <= 120 &&
+             data.topicPrompt is string && data.topicPrompt.size() <= 500 &&
+             data.scheduledEpochMs is int && data.scheduledEpochMs >= 0 &&
+             data.scheduledLabel is string && data.scheduledLabel.size() <= 100 &&
+             data.status in ['upcoming', 'live', 'wrapped'] &&
+             data.aiSummary is string && data.aiSummary.size() <= 4000 &&
+             isValidStringList(data.participantUids, 50, 128) &&
+             data.memberUids is list && data.memberUids.size() >= 1 && data.memberUids.size() <= 50 &&
+             (data.memberUids[0] is string && data.memberUids[0].size() <= 128);
+    }
+
+    // --- 1. USERS & PRIVATE DATA ---
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'email', 'defaultTags', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'photoUrl', 'defaultTags', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'photoUrl', 'defaultTags', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      // Personal Notes
+      match /notes/{noteId} {
+        allow list: if isSignedIn() && request.auth.uid == userId;
+        allow get: if isSignedIn() && isValidId(noteId) && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(noteId) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'rawContent', 'cleanContent', 'title', 'tags', 'captureSource', 'priority', 'deadlineEpochMs', 'deadlineLabel', 'reminderCadence', 'aiProcessed', 'isArchived', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'rawContent', 'cleanContent', 'title', 'tags', 'captureSource', 'priority', 'deadlineEpochMs', 'deadlineLabel', 'reminderCadence', 'aiProcessed', 'isArchived', 'createdAt', 'updatedAt']) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidNote(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(noteId) &&
+                         isValidNote(incoming()) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().rawContent == existing().rawContent &&
+                         incoming().captureSource == existing().captureSource &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['cleanContent', 'title', 'tags', 'priority', 'deadlineEpochMs', 'deadlineLabel', 'reminderCadence', 'aiProcessed', 'isArchived', 'updatedAt']);
+
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(noteId) && request.auth.uid == userId;
+      }
+
+      // Stitched Scripts (AI-synthesized from 3+ related raw notes)
+      match /stitched_scripts/{scriptId} {
+        allow list: if isSignedIn() && request.auth.uid == userId;
+        allow get: if isSignedIn() && isValidId(scriptId) && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(scriptId) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'title', 'themeTag', 'insightSummary', 'scriptBody', 'linkedNoteIds', 'linkedNoteCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'themeTag', 'insightSummary', 'scriptBody', 'linkedNoteIds', 'linkedNoteCount', 'createdAt', 'updatedAt']) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidStitchedScript(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(scriptId) &&
+                         isValidStitchedScript(incoming()) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'themeTag', 'insightSummary', 'scriptBody', 'linkedNoteIds', 'linkedNoteCount', 'updatedAt']);
+
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(scriptId) && request.auth.uid == userId;
+      }
+    }
+
+    // --- 2. TEAM PANEL INVITES (Direct get by exact code only; listing disabled) ---
+    match /panel_invites/{inviteCode} {
+      allow list: if false;
+      allow get: if isSignedIn() && isValidId(inviteCode);
+
+      allow create: if isSignedIn() &&
+                       isValidId(inviteCode) &&
+                       incoming().ownerId == request.auth.uid &&
+                       incoming().inviteCode == inviteCode &&
+                       incoming().keys().hasAll(['inviteCode', 'panelId', 'panelName', 'ownerId', 'createdAt']) &&
+                       incoming().keys().hasOnly(['inviteCode', 'panelId', 'panelName', 'ownerId', 'createdAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidPanelInvite(incoming()) &&
+                       existsAfter(/databases/$(database)/documents/panels/$(incoming().panelId)) &&
+                       getAfter(/databases/$(database)/documents/panels/$(incoming().panelId)).data.ownerId == request.auth.uid;
+
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(inviteCode) && existing().ownerId == request.auth.uid;
+    }
+
+    // --- 3. TEAM PANELS & SUBCOLLECTIONS ---
+    match /panels/{panelId} {
+      allow list: if isSignedIn() && request.auth.uid in resource.data.memberUids;
+      allow get: if isSignedIn() && isValidId(panelId) && request.auth.uid in resource.data.memberUids;
+
+      allow create: if isSignedIn() &&
+                       isValidId(panelId) &&
+                       incoming().ownerId == request.auth.uid &&
+                       request.auth.uid in incoming().memberUids &&
+                       incoming().memberUids.size() == 1 &&
+                       incoming().keys().hasAll(['ownerId', 'ownerName', 'name', 'description', 'inviteCode', 'memberUids', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['ownerId', 'ownerName', 'name', 'description', 'inviteCode', 'memberUids', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidPanel(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(panelId) &&
+                       isValidPanel(incoming()) &&
+                       incoming().ownerId == existing().ownerId &&
+                       incoming().ownerName == existing().ownerName &&
+                       incoming().inviteCode == existing().inviteCode &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) && (
+                         // Action 1: Owner edits metadata
+                         (existing().ownerId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'updatedAt'])) ||
+                         // Action 2: Authenticated user joins via valid invite
+                         (!(request.auth.uid in existing().memberUids) &&
+                          request.auth.uid in incoming().memberUids &&
+                          incoming().memberUids.size() == existing().memberUids.size() + 1 &&
+                          incoming().memberUids.hasAll(existing().memberUids) &&
+                          exists(/databases/$(database)/documents/panel_invites/$(existing().inviteCode)) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['memberUids', 'updatedAt'])) ||
+                         // Action 3: Non-owner member leaves panel
+                         (request.auth.uid != existing().ownerId &&
+                          request.auth.uid in existing().memberUids &&
+                          !(request.auth.uid in incoming().memberUids) &&
+                          incoming().memberUids.size() == existing().memberUids.size() - 1 &&
+                          existing().memberUids.hasAll(incoming().memberUids) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['memberUids', 'updatedAt']))
+                       );
+
+      allow delete: if isSignedIn() && isValidId(panelId) && existing().ownerId == request.auth.uid;
+
+      // Collaborative Panel Ideas
+      match /ideas/{ideaId} {
+        allow list: if isSignedIn() && request.auth.uid in resource.data.memberUids;
+        allow get: if isSignedIn() && isValidId(panelId) && isValidId(ideaId) && request.auth.uid in resource.data.memberUids;
+
+        allow create: if isSignedIn() &&
+                         isValidId(panelId) &&
+                         isValidId(ideaId) &&
+                         incoming().authorId == request.auth.uid &&
+                         incoming().panelId == panelId &&
+                         incoming().keys().hasAll(['panelId', 'authorId', 'authorName', 'content', 'tag', 'sourceNoteId', 'memberUids', 'upvoterUids', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['panelId', 'authorId', 'authorName', 'content', 'tag', 'sourceNoteId', 'memberUids', 'upvoterUids', 'createdAt', 'updatedAt']) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidPanelIdea(incoming()) &&
+                         exists(/databases/$(database)/documents/panels/$(panelId)) &&
+                         request.auth.uid in get(/databases/$(database)/documents/panels/$(panelId)).data.memberUids &&
+                         incoming().memberUids == get(/databases/$(database)/documents/panels/$(panelId)).data.memberUids;
+
+        allow update: if isSignedIn() &&
+                         isValidId(panelId) &&
+                         isValidId(ideaId) &&
+                         isValidPanelIdea(incoming()) &&
+                         incoming().panelId == existing().panelId &&
+                         incoming().authorId == existing().authorId &&
+                         incoming().authorName == existing().authorName &&
+                         incoming().sourceNoteId == existing().sourceNoteId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) && (
+                           // Action 1: Author edits content/tag
+                           (existing().authorId == request.auth.uid &&
+                            request.auth.uid in existing().memberUids &&
+                            incoming().diff(existing()).affectedKeys().hasOnly(['content', 'tag', 'updatedAt'])) ||
+                           // Action 2: Panel member toggles upvote
+                           (request.auth.uid in existing().memberUids &&
+                            incoming().diff(existing()).affectedKeys().hasOnly(['upvoterUids', 'updatedAt'])) ||
+                           // Action 3: Existing member syncs memberUids from parent panel
+                           (request.auth.uid in existing().memberUids &&
+                            incoming().diff(existing()).affectedKeys().hasOnly(['memberUids', 'updatedAt']) &&
+                            incoming().memberUids == get(/databases/$(database)/documents/panels/$(panelId)).data.memberUids)
+                         );
+
+        allow delete: if isSignedIn() &&
+                         isValidId(panelId) &&
+                         isValidId(ideaId) &&
+                         (existing().authorId == request.auth.uid ||
+                          get(/databases/$(database)/documents/panels/$(panelId)).data.ownerId == request.auth.uid);
+      }
+
+      // Structured Team Brainstorming Events
+      match /events/{eventId} {
+        allow list: if isSignedIn() && request.auth.uid in resource.data.memberUids;
+        allow get: if isSignedIn() && isValidId(panelId) && isValidId(eventId) && request.auth.uid in resource.data.memberUids;
+
+        allow create: if isSignedIn() &&
+                         isValidId(panelId) &&
+                         isValidId(eventId) &&
+                         incoming().creatorId == request.auth.uid &&
+                         incoming().panelId == panelId &&
+                         incoming().keys().hasAll(['panelId', 'creatorId', 'creatorName', 'title', 'topicPrompt', 'scheduledEpochMs', 'scheduledLabel', 'status', 'aiSummary', 'participantUids', 'memberUids', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['panelId', 'creatorId', 'creatorName', 'title', 'topicPrompt', 'scheduledEpochMs', 'scheduledLabel', 'status', 'aiSummary', 'participantUids', 'memberUids', 'createdAt', 'updatedAt']) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidBrainstormEvent(incoming()) &&
+                         exists(/databases/$(database)/documents/panels/$(panelId)) &&
+                         request.auth.uid in get(/databases/$(database)/documents/panels/$(panelId)).data.memberUids &&
+                         incoming().memberUids == get(/databases/$(database)/documents/panels/$(panelId)).data.memberUids;
+
+        allow update: if isSignedIn() &&
+                         isValidId(panelId) &&
+                         isValidId(eventId) &&
+                         isValidBrainstormEvent(incoming()) &&
+                         incoming().panelId == existing().panelId &&
+                         incoming().creatorId == existing().creatorId &&
+                         incoming().creatorName == existing().creatorName &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) && (
+                           // Action 1: Member RSVPs while not wrapped (terminal state lock)
+                           (existing().status != 'wrapped' &&
+                            request.auth.uid in existing().memberUids &&
+                            incoming().diff(existing()).affectedKeys().hasOnly(['participantUids', 'updatedAt'])) ||
+                           // Action 2: Member updates event status or AI summary while not wrapped
+                           (existing().status != 'wrapped' &&
+                            request.auth.uid in existing().memberUids &&
+                            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'aiSummary', 'updatedAt'])) ||
+                           // Action 3: Existing member syncs memberUids from parent panel
+                           (request.auth.uid in existing().memberUids &&
+                            incoming().diff(existing()).affectedKeys().hasOnly(['memberUids', 'updatedAt']) &&
+                            incoming().memberUids == get(/databases/$(database)/documents/panels/$(panelId)).data.memberUids)
+                         );
+
+        allow delete: if isSignedIn() &&
+                         isValidId(panelId) &&
+                         isValidId(eventId) &&
+                         (existing().creatorId == request.auth.uid ||
+                          get(/databases/$(database)/documents/panels/$(panelId)).data.ownerId == request.auth.uid);
+      }
+    }
+  }
+}

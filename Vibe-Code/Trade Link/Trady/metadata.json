@@ -1,0 +1,6 @@
+{
+  "name": "Trady Link",
+  "description": "Multi-category e-commerce marketplace, last-mile courier telemetry, and dual-mode fleet lease-to-own network.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

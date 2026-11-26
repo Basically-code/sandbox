@@ -1,0 +1,19 @@
+{
+  "name": "tradee-website",
+  "version": "2.0.0",
+  "description": "Tradee (TradeLink) Web Application — Multi-Seller Marketplace, Price Comparison Engine & Bolt-Style On-Demand Transport",
+  "main": "js/app.js",
+  "scripts": {
+    "start": "python server.py 8080",
+    "test": "python ../tests/test_tradee_all_codebases.py"
+  },
+  "keywords": [
+    "tradee",
+    "tradelink",
+    "marketplace",
+    "price-comparison",
+    "bolt-transport",
+    "tanzania"
+  ],
+  "license": "Proprietary"
+}

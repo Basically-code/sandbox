@@ -1,0 +1,421 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HARDENED HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidRole(role) {
+      return role in ['BUYER', 'PROVIDER', 'DRIVER'];
+    }
+
+    function isValidCategory(category) {
+      return category in [
+        'SPORTS_AND_OUTDOORS',
+        'ELECTRONICS',
+        'FOOD',
+        'BOOKS',
+        'CLOTHING',
+        'SHOES',
+        'JEWELLERY',
+        'BEAUTY_AND_PERSONAL_CARE'
+      ];
+    }
+
+    function isValidPaymentMethod(method) {
+      return method in ['CASH_BY_HAND_WITH_RECEIPT', 'FIREWALL_CARD_PAYMENT'];
+    }
+
+    function isValidOrderStatus(status) {
+      return status in [
+        'PENDING_DISPATCH',
+        'DRIVER_ASSIGNED',
+        'BOX_ATTACHED_PICKED_UP',
+        'IN_TRANSIT',
+        'ARRIVED_AWAITING_SECRET_CODE',
+        'DELIVERED_COMPLETED',
+        'DAMAGED_OR_LOST_REFUNDED',
+        'ROBBERY_OR_HARM_REFUNDED'
+      ];
+    }
+
+    function isTerminalOrderStatus(status) {
+      return status in [
+        'DELIVERED_COMPLETED',
+        'DAMAGED_OR_LOST_REFUNDED',
+        'ROBBERY_OR_HARM_REFUNDED'
+      ];
+    }
+
+    function isValidVehicleStatus(status) {
+      return status in [
+        'STATION_CHECKED_IN',
+        'ACTIVE_PACKAGE_DELIVERY',
+        'ACTIVE_PASSENGER_IDLE_MODE',
+        'CURFEW_BREACH_STOLEN_ALERT',
+        'MAINTENANCE'
+      ];
+    }
+
+    function isValidRideHailPartner(partner) {
+      return partner in ['NONE', 'STREET_HAIL', 'BOLT', 'UBER', 'LINKER'];
+    }
+
+    // --- ENTITY VALIDATION BLUEPRINTS ---
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120 &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 25)) &&
+             isValidRole(data.activeRole) &&
+             data.termsAccepted is bool &&
+             (!('stationName' in data) || (data.stationName is string && data.stationName.size() <= 120)) &&
+             (!('vehiclePlate' in data) || (data.vehiclePlate is string && data.vehiclePlate.size() <= 25)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidProduct(data) {
+      return data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+             data.providerName is string && data.providerName.size() >= 1 && data.providerName.size() <= 120 &&
+             isValidCategory(data.category) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 180 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             data.priceTzs is number && data.priceTzs > 0 &&
+             data.quantityAvailable is int && data.quantityAvailable >= 0 && data.quantityAvailable <= 100000 &&
+             data.sizeSpec is string && data.sizeSpec.size() >= 1 && data.sizeSpec.size() <= 80 &&
+             data.weightKg is number && data.weightKg >= 0 && data.weightKg <= 10000 &&
+             data.requiresTruck is bool &&
+             data.isDailyDeal is bool &&
+             data.isActive is bool &&
+             data.pickupLabel is string && data.pickupLabel.size() >= 1 && data.pickupLabel.size() <= 120 &&
+             (!('photoUri' in data) || (data.photoUri is string && data.photoUri.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidOrder(data) {
+      return data.buyerId is string && data.buyerId.size() >= 1 && data.buyerId.size() <= 128 &&
+             data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+             data.driverId is string && data.driverId.size() >= 1 && data.driverId.size() <= 128 &&
+             data.participantIds is list && data.participantIds.size() >= 1 && data.participantIds.size() <= 3 &&
+             data.participantIds[0] is string &&
+             data.productId is string && isValidId(data.productId) &&
+             data.productTitle is string && data.productTitle.size() >= 1 && data.productTitle.size() <= 180 &&
+             isValidCategory(data.category) &&
+             data.selectedSize is string && data.selectedSize.size() >= 1 && data.selectedSize.size() <= 80 &&
+             data.quantity is int && data.quantity >= 1 && data.quantity <= 1000 &&
+             data.unitPriceTzs is number && data.unitPriceTzs > 0 &&
+             data.itemSubtotalTzs is number && data.itemSubtotalTzs > 0 &&
+             data.transportFeeTzs is number && data.transportFeeTzs >= 0 &&
+             data.totalAmountTzs is number && data.totalAmountTzs > 0 &&
+             isValidPaymentMethod(data.paymentMethod) &&
+             data.secretSafetyCode is string && data.secretSafetyCode.size() >= 4 && data.secretSafetyCode.size() <= 40 &&
+             data.receiptNumber is string && data.receiptNumber.size() >= 4 && data.receiptNumber.size() <= 40 &&
+             data.driverName is string && data.driverName.size() >= 1 && data.driverName.size() <= 120 &&
+             data.driverPlate is string && data.driverPlate.size() >= 1 && data.driverPlate.size() <= 25 &&
+             data.requiresTruck is bool &&
+             data.cargoBoxAttached is bool &&
+             isValidOrderStatus(data.status) &&
+             data.refundAmountTzs is number && data.refundAmountTzs >= 0 &&
+             data.disturbanceCompTzs is number && data.disturbanceCompTzs >= 0 &&
+             data.driverLat is number && data.driverLng is number &&
+             data.destLat is number && data.destLng is number &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidDriverContract(data) {
+      return data.driverId is string && data.driverId.size() >= 1 && data.driverId.size() <= 128 &&
+             data.driverName is string && data.driverName.size() >= 1 && data.driverName.size() <= 120 &&
+             data.vehiclePlate is string && data.vehiclePlate.size() >= 1 && data.vehiclePlate.size() <= 25 &&
+             data.secretGpsImei is string && data.secretGpsImei.size() >= 4 && data.secretGpsImei.size() <= 64 &&
+             data.stationName is string && data.stationName.size() >= 1 && data.stationName.size() <= 120 &&
+             isValidVehicleStatus(data.vehicleStatus) &&
+             data.cargoBoxAttached is bool &&
+             isValidRideHailPartner(data.rideHailPartner) &&
+             data.weeklyFeeTzs is int && data.weeklyFeeTzs == 70000 &&
+             data.totalWeeksRequired is int && data.totalWeeksRequired == 104 &&
+             data.weeksPaidCount is int && data.weeksPaidCount >= 0 && data.weeksPaidCount <= 104 &&
+             data.totalPaidTzs is number && data.totalPaidTzs >= 0 &&
+             data.ownershipTransferred is bool &&
+             data.curfewViolated is bool &&
+             (!('lastCheckedOutLabel' in data) || (data.lastCheckedOutLabel is string && data.lastCheckedOutLabel.size() <= 80)) &&
+             (!('lastCheckedInLabel' in data) || (data.lastCheckedInLabel is string && data.lastCheckedInLabel.size() <= 80)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFavoriteProduct(data, productId) {
+      return data.productId is string &&
+             data.productId == productId &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time;
+    }
+
+    function isValidCartItem(data, productId) {
+      return data.productId is string &&
+             isValidId(data.productId) &&
+             data.productId == productId &&
+             data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 128 &&
+             data.providerName is string && data.providerName.size() >= 1 && data.providerName.size() <= 120 &&
+             isValidCategory(data.category) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 180 &&
+             data.priceTzs is number && data.priceTzs > 0 &&
+             data.quantity is int && data.quantity >= 1 && data.quantity <= 1000 &&
+             data.sizeSpec is string && data.sizeSpec.size() >= 1 && data.sizeSpec.size() <= 80 &&
+             data.weightKg is number && data.weightKg >= 0 && data.weightKg <= 10000 &&
+             data.requiresTruck is bool &&
+             data.pickupLabel is string && data.pickupLabel.size() >= 1 && data.pickupLabel.size() <= 120 &&
+             (!('photoUri' in data) || (data.photoUri is string && data.photoUri.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // --- 1. USERS COLLECTION (Owner-Isolated PII & Role Portal) ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'fullName', 'activeRole', 'termsAccepted', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'fullName', 'phoneNumber', 'activeRole', 'termsAccepted', 'stationName', 'vehiclePlate', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'phoneNumber', 'activeRole', 'termsAccepted', 'stationName', 'vehiclePlate', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      match /favorites/{productId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(productId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+        allow create, update: if isSignedIn() &&
+                                 isValidId(userId) &&
+                                 isValidId(productId) &&
+                                 request.auth.uid == userId &&
+                                 incoming().keys().hasAll(['productId', 'createdAt']) &&
+                                 incoming().keys().hasOnly(['productId', 'createdAt']) &&
+                                 isValidFavoriteProduct(incoming(), productId);
+
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(productId) && request.auth.uid == userId;
+      }
+
+      match /cart/{productId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(productId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(productId) &&
+                         request.auth.uid == userId &&
+                         incoming().keys().hasAll([
+                           'productId', 'providerId', 'providerName', 'category', 'title',
+                           'priceTzs', 'quantity', 'sizeSpec', 'weightKg', 'requiresTruck',
+                           'pickupLabel', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'productId', 'providerId', 'providerName', 'category', 'title',
+                           'priceTzs', 'quantity', 'sizeSpec', 'weightKg', 'requiresTruck',
+                           'pickupLabel', 'photoUri', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidCartItem(incoming(), productId) &&
+                         exists(/databases/$(database)/documents/products/$(productId));
+
+        allow update: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(productId) &&
+                         request.auth.uid == userId &&
+                         isValidCartItem(incoming(), productId) &&
+                         incoming().productId == existing().productId &&
+                         incoming().providerId == existing().providerId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'quantity', 'priceTzs', 'title', 'sizeSpec', 'photoUri', 'updatedAt'
+                         ]);
+
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(productId) && request.auth.uid == userId;
+      }
+    }
+
+    // --- 2. PRODUCTS COLLECTION (Public Active Marketplace + Provider Management) ---
+    match /products/{productId} {
+      allow get: if isSignedIn() && isValidId(productId) &&
+                    (existing().isActive == true || existing().providerId == request.auth.uid);
+
+      allow list: if isSignedIn() &&
+                     (existing().isActive == true || existing().providerId == request.auth.uid);
+
+      allow create: if isSignedIn() &&
+                       isValidId(productId) &&
+                       incoming().providerId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'providerId', 'providerName', 'category', 'title', 'priceTzs',
+                         'quantityAvailable', 'sizeSpec', 'weightKg', 'requiresTruck',
+                         'isDailyDeal', 'isActive', 'pickupLabel', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'providerId', 'providerName', 'category', 'title', 'description', 'priceTzs',
+                         'quantityAvailable', 'sizeSpec', 'weightKg', 'requiresTruck',
+                         'isDailyDeal', 'isActive', 'pickupLabel', 'photoUri', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidProduct(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(productId) &&
+                       isValidProduct(incoming()) &&
+                       existing().providerId == request.auth.uid &&
+                       incoming().providerId == existing().providerId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'providerName', 'category', 'title', 'description', 'priceTzs',
+                         'quantityAvailable', 'sizeSpec', 'weightKg', 'requiresTruck',
+                         'isDailyDeal', 'isActive', 'pickupLabel', 'photoUri', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(productId) && existing().providerId == request.auth.uid;
+    }
+
+    // --- 3. ORDERS COLLECTION (Participant-Scoped + Terminal State Locking) ---
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && isValidId(orderId) && request.auth.uid in existing().participantIds;
+      allow list: if isSignedIn() && request.auth.uid in existing().participantIds;
+
+      allow create: if isSignedIn() &&
+                       isValidId(orderId) &&
+                       incoming().buyerId == request.auth.uid &&
+                       request.auth.uid in incoming().participantIds &&
+                       incoming().status == 'PENDING_DISPATCH' &&
+                       incoming().refundAmountTzs == 0 &&
+                       incoming().disturbanceCompTzs == 0 &&
+                       incoming().keys().hasAll([
+                         'buyerId', 'providerId', 'driverId', 'participantIds', 'productId',
+                         'productTitle', 'category', 'selectedSize', 'quantity', 'unitPriceTzs',
+                         'itemSubtotalTzs', 'transportFeeTzs', 'totalAmountTzs', 'paymentMethod',
+                         'secretSafetyCode', 'receiptNumber', 'driverName', 'driverPlate',
+                         'requiresTruck', 'cargoBoxAttached', 'status', 'refundAmountTzs',
+                         'disturbanceCompTzs', 'driverLat', 'driverLng', 'destLat', 'destLng',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'buyerId', 'providerId', 'driverId', 'participantIds', 'productId',
+                         'productTitle', 'category', 'selectedSize', 'quantity', 'unitPriceTzs',
+                         'itemSubtotalTzs', 'transportFeeTzs', 'totalAmountTzs', 'paymentMethod',
+                         'secretSafetyCode', 'receiptNumber', 'driverName', 'driverPlate',
+                         'requiresTruck', 'cargoBoxAttached', 'status', 'refundAmountTzs',
+                         'disturbanceCompTzs', 'driverLat', 'driverLng', 'destLat', 'destLng',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidOrder(incoming()) &&
+                       exists(/databases/$(database)/documents/products/$(incoming().productId));
+
+      allow update: if isSignedIn() &&
+                       isValidId(orderId) &&
+                       isValidOrder(incoming()) &&
+                       request.auth.uid in existing().participantIds &&
+                       incoming().buyerId == existing().buyerId &&
+                       incoming().providerId == existing().providerId &&
+                       incoming().productId == existing().productId &&
+                       incoming().totalAmountTzs == existing().totalAmountTzs &&
+                       incoming().secretSafetyCode == existing().secretSafetyCode &&
+                       incoming().createdAt == existing().createdAt &&
+                       !isTerminalOrderStatus(existing().status) && (
+                         // Action 1: Dispatch & Live Telemetry / Cargo Box progression
+                         (incoming().status in ['DRIVER_ASSIGNED', 'BOX_ATTACHED_PICKED_UP', 'IN_TRANSIT', 'ARRIVED_AWAITING_SECRET_CODE'] &&
+                          incoming().refundAmountTzs == 0 &&
+                          incoming().disturbanceCompTzs == 0 &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'cargoBoxAttached', 'driverLat', 'driverLng', 'updatedAt'])) ||
+                         // Action 2: Buyer confirms Secret Code & Safe Receipt
+                         (request.auth.uid == existing().buyerId &&
+                          incoming().status == 'DELIVERED_COMPLETED' &&
+                          incoming().refundAmountTzs == 0 &&
+                          incoming().disturbanceCompTzs == 0 &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+                         // Action 3: Rule A Refund (Damaged / Lost -> 100% refund)
+                         (request.auth.uid == existing().buyerId &&
+                          incoming().status == 'DAMAGED_OR_LOST_REFUNDED' &&
+                          incoming().disturbanceCompTzs == 0 &&
+                          incoming().refundAmountTzs == existing().totalAmountTzs &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'refundAmountTzs', 'disturbanceCompTzs', 'updatedAt'])) ||
+                         // Action 4: Rule B Refund (Robbery / Harm -> 100% refund)
+                         (request.auth.uid == existing().buyerId &&
+                          incoming().status == 'ROBBERY_OR_HARM_REFUNDED' &&
+                          incoming().disturbanceCompTzs == 0 &&
+                          incoming().refundAmountTzs == existing().totalAmountTzs &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'refundAmountTzs', 'disturbanceCompTzs', 'updatedAt']))
+                       );
+
+      allow delete: if false;
+    }
+
+    // --- 4. DRIVER CONTRACTS & LEASE-TO-OWN LEDGER (Owner-Isolated) ---
+    match /driver_contracts/{driverId} {
+      allow get: if isSignedIn() && isValidId(driverId) && request.auth.uid == driverId;
+      allow list: if isSignedIn() && existing().driverId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(driverId) &&
+                       request.auth.uid == driverId &&
+                       incoming().driverId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'driverId', 'driverName', 'vehiclePlate', 'secretGpsImei', 'stationName',
+                         'vehicleStatus', 'cargoBoxAttached', 'rideHailPartner', 'weeklyFeeTzs',
+                         'totalWeeksRequired', 'weeksPaidCount', 'totalPaidTzs',
+                         'ownershipTransferred', 'curfewViolated', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'driverId', 'driverName', 'vehiclePlate', 'secretGpsImei', 'stationName',
+                         'vehicleStatus', 'cargoBoxAttached', 'rideHailPartner', 'weeklyFeeTzs',
+                         'totalWeeksRequired', 'weeksPaidCount', 'totalPaidTzs',
+                         'ownershipTransferred', 'curfewViolated', 'lastCheckedOutLabel',
+                         'lastCheckedInLabel', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidDriverContract(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(driverId) &&
+                       request.auth.uid == driverId &&
+                       isValidDriverContract(incoming()) &&
+                       incoming().driverId == existing().driverId &&
+                       incoming().weeklyFeeTzs == existing().weeklyFeeTzs &&
+                       incoming().totalWeeksRequired == existing().totalWeeksRequired &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'driverName', 'vehiclePlate', 'stationName', 'vehicleStatus',
+                         'cargoBoxAttached', 'rideHailPartner', 'weeksPaidCount', 'totalPaidTzs',
+                         'ownershipTransferred', 'curfewViolated', 'lastCheckedOutLabel',
+                         'lastCheckedInLabel', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(driverId) && request.auth.uid == driverId;
+    }
+  }
+}
