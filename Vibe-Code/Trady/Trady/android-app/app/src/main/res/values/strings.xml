@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">Tradee</string>
-    <string name="brand_trady_link">Tradee</string>
-    <string name="sign_in_with_google">Sign in with Google</string>
-    <string name="start_sign_in">Sign In</string>
-    <string name="start_sign_up">Sign Up</string>
-    <string name="enter_without_signup">Enter without sign up</string>
-    <string name="cd_trady_logo">Tradee logo: a T formed by a marketplace bar and a delivery pin</string>
-</resources>
