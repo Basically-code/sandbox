@@ -1,10 +1,33 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+
+const requiredFirebaseEnv = {
+  apiKey: 'VITE_FIREBASE_API_KEY',
+  authDomain: 'VITE_FIREBASE_AUTH_DOMAIN',
+  projectId: 'VITE_FIREBASE_PROJECT_ID',
+  storageBucket: 'VITE_FIREBASE_STORAGE_BUCKET',
+  messagingSenderId: 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  appId: 'VITE_FIREBASE_APP_ID',
+  firestoreDatabaseId: 'VITE_FIREBASE_DATABASE_ID',
+} as const;
+
+const missingFirebaseEnv = Object.values(requiredFirebaseEnv).filter(key => !import.meta.env[key]);
+if (missingFirebaseEnv.length) {
+  throw new Error(`Missing Firebase configuration: ${missingFirebaseEnv.join(', ')}`);
+}
+
+const firebaseConfig = {
+  apiKey: import.meta.env[requiredFirebaseEnv.apiKey],
+  authDomain: import.meta.env[requiredFirebaseEnv.authDomain],
+  projectId: import.meta.env[requiredFirebaseEnv.projectId],
+  storageBucket: import.meta.env[requiredFirebaseEnv.storageBucket],
+  messagingSenderId: import.meta.env[requiredFirebaseEnv.messagingSenderId],
+  appId: import.meta.env[requiredFirebaseEnv.appId],
+};
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, import.meta.env[requiredFirebaseEnv.firestoreDatabaseId]);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 

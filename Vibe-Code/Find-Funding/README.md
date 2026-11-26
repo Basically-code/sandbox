@@ -19,8 +19,12 @@ Find Funding South Africa is a full-stack React 19 + TypeScript and Express plat
 ## Quick Start
 ```bash
 npm install
+cp .env.example .env
+# Fill in the Firebase values in .env before running the app.
 npm run dev
 ```
+
+Firebase browser configuration is loaded from the local `.env` file and must not be committed. Values prefixed with `VITE_` are included in the browser bundle, so the Firebase API key is not a secret; restrict it in Google Cloud Console and secure access with Firebase Authentication and Firestore rules.
 
 ## Production Build & Launch
 ```bash
