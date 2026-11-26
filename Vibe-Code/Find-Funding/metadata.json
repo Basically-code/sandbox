@@ -1,0 +1,6 @@
+{
+  "name": "ScholarPulse - Student Funding & Scholarship Discovery",
+  "description": "Real-time verified funding discovery for students across all study levels, with academic mark eligibility matching, application tracking, and deadline reminder automation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

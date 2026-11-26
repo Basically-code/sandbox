@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "User Profile",
+      "description": "Student profile containing academic marks, study level, and notification preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "studyLevel": { "type": "string", "enum": ["high_school", "undergraduate", "masters", "phd", "postdoc", "vocational"] },
+        "fieldOfStudy": { "type": "string", "maxLength": 100 },
+        "marksPercentage": { "type": "number" },
+        "gpa": { "type": "number" },
+        "financialNeedLevel": { "type": "string", "enum": ["none", "moderate", "high", "maximum"] },
+        "country": { "type": "string", "maxLength": 100 },
+        "emailRemindersEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "fullName", "studyLevel", "marksPercentage", "emailRemindersEnabled"]
+    },
+    "applicationRecord": {
+      "title": "Application Tracker Record",
+      "description": "Tracks a student's funding application status, deadlines, and notes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "scholarshipId": { "type": "string", "maxLength": 128 },
+        "scholarshipTitle": { "type": "string", "maxLength": 200 },
+        "providerName": { "type": "string", "maxLength": 150 },
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["saved", "preparing", "submitted", "awarded", "not_awarded"] },
+        "deadline": { "type": "string", "maxLength": 30 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "portalUrl": { "type": "string", "maxLength": 500 },
+        "reminderScheduled": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "scholarshipId", "scholarshipTitle", "providerName", "status", "deadline"]
+    },
+    "deadlineReminder": {
+      "title": "Deadline Reminder",
+      "description": "Scheduled reminder notifications for approaching funding deadlines.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "scholarshipId": { "type": "string", "maxLength": 128 },
+        "scholarshipTitle": { "type": "string", "maxLength": 200 },
+        "deadline": { "type": "string", "maxLength": 30 },
+        "daysBefore": { "type": "number" },
+        "scheduledDate": { "type": "string", "maxLength": 30 },
+        "status": { "type": "string", "enum": ["scheduled", "delivered", "dismissed"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "email", "scholarshipId", "scholarshipTitle", "deadline", "status"]
+    },
+    "scholarship": {
+      "title": "Scholarship Opportunity",
+      "description": "Verified external grant or scholarship offering with eligibility criteria.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "provider": { "type": "string", "maxLength": 150 },
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 10 },
+        "studyLevel": { "type": "string", "maxLength": 50 },
+        "minMarks": { "type": "number" },
+        "field": { "type": "string", "maxLength": 100 },
+        "financialNeedRequired": { "type": "boolean" },
+        "deadline": { "type": "string", "maxLength": 30 },
+        "portalUrl": { "type": "string", "maxLength": 500 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "verifiedDate": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "title", "provider", "amount", "studyLevel", "minMarks", "portalUrl", "deadline"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/profile/info": {
+      "schema": { "$ref": "#/entities/userProfile" },
+      "description": "Private student academic and contact profile."
+    },
+    "/users/{userId}/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/applicationRecord" },
+      "description": "Individual funding applications tracked by a student."
+    },
+    "/users/{userId}/reminders/{reminderId}": {
+      "schema": { "$ref": "#/entities/deadlineReminder" },
+      "description": "Automated email reminders for funding deadlines."
+    },
+    "/scholarships/{scholarshipId}": {
+      "schema": { "$ref": "#/entities/scholarship" },
+      "description": "Directory of verified live scholarships and grants."
+    }
+  }
+}
